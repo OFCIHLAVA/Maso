@@ -6,13 +6,11 @@ import os
 def create_table(database=str, table_name=str, columns_statement=str): # Functin to create / conect database with specified table with specified columns.
                                                              # columns_statement parameter needs to be string with SQL statement as when creating table in sql.
                                                              # for example: 'name TEXT NOT NULL, age INTEGER NOT NULL' 
-    print(f'\nCreating table: {table_name} in database: {database}...\n')    
-
     # Check if the database file exists
     if not os.path.exists(database):
-        print(f"Database '{database}' does not exist. Creating database file '{database}' now...\n")
+        print(f"Database '{database}' does not exist. Creating database file '{database}' now.")
     else:
-        print(f"Database '{database}' already exists. Connecting to the database file...\n")
+        print(f"Database '{database}' already exists. Connecting to the database file.")
 
     try:
         # Connect to the database
@@ -25,22 +23,22 @@ def create_table(database=str, table_name=str, columns_statement=str): # Functin
         cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'")
         result = cursor.fetchone()
         if result:
-            print(f"Table '{table_name}' already exists in database '{database}', not creating new table.\n")
+            print(f"Table '{table_name}' already exists in database '{database}', not creating new table.")
         else:
             # Create the table
             cursor.execute(f'CREATE TABLE {table_name} ({columns_statement})')
-            print(f'Table {table_name} succesfuly created in database {database}\n')
+            print(f'Table {table_name} created in database {database}')
 
         # Save the changes
         conn.commit()
     except sqlite3.OperationalError as e:
         # The database does not exist
         if "no such table" in str(e):
-            print(f"Database '{database}' does not exist\n")
+            print(f"Database '{database}' does not exist")
         else:
-            print(f'Error when connectiong to the database: {e}.\n')
+            print(f'Error when connectiong to the database: {e}.')
     except Exception as e:
-        print(f'Error when connectiong to the database: {e}\n')
+        print(f'Error when connectiong to the database: {e}')
     finally:
         # Close the connection
         conn.close()
@@ -77,6 +75,7 @@ def get_table_columns(database=str, table_name=str): # Returns list of columns n
 
     # Store the column names in a list
     column_names = [row[1] for row in cursor]
+    #column_names = [row[1] for row in cursor if row[1] != "id"]
 
     # Close the connection
     conn.close()
@@ -116,7 +115,7 @@ def show_all_records_database_in_table(database=str, table_name=str): # Shows al
     column_names = get_table_columns(database, f'"{table_name}"')
 
     # Select all rows from the materials table
-    cursor.execute(f'SELECT rowid, * FROM "{table_name}"')
+    cursor.execute(f'SELECT * FROM "{table_name}"')
     # Print count of records
     rows = cursor.fetchall()
     print(f'{len(rows)} records in database {database}, table {table_name}:\n')
@@ -125,7 +124,7 @@ def show_all_records_database_in_table(database=str, table_name=str): # Shows al
     print(f'Showing records in database: {database}, in table: {table_name}.\n')    
 
     # Adding ID colum name to column names (optional)
-    column_names.insert(0, "ID")
+    #column_names.insert(0, "ID")
 
     # Print the column headings
     print('\t'.join(column_names))
@@ -154,7 +153,7 @@ def insert_records_into_database_into_table_from_file(database=str, table_name=s
         print(f'Opening the import file to get number of records to insert into database ...')
         # Number of lines in text
         count_lines = len(f.readlines())
-        print(f'Done. Number of records to be inserted into databas: {count_lines}.')
+        print(f'Done. Number of records to be inserted into database: {count_lines}.')
         f.close()     
 
     # Open the text file for reading, specifying the encoding
@@ -245,20 +244,21 @@ def insert_records_into_database_into_table_from_file(database=str, table_name=s
                 ## A] IF we want to have only one record for each unique item (TRUE in last parameter) → will update records, if not same as in import file
                 if unique_items == True:
                     # Check if the item already exists in the table
-                    print(f'Checking if item {item} already exists in database.')
+                    #print(f'Checking if item {item} already exists in database.')
                     if not item_exists(database, table_name, headings[unique_item_index], item):
-                        print(f'Item {item} no found in table: {table_name} in database {database}.')
+                        #print(f'Item {item} not found in table: {table_name} in database {database}.')
                         # Insert the item into the table            
                         insert_record(database, table_name, table_column_names, item_values)
 
                     else:
-                        print(f'Item {item} already found in table: {table_name} in database {database}.')
-                        print(f'Checking, if record for item {item} in table: {table_name} in database {database} is the same as in upload file.')
+                        #print(f'Item {item} already found in table: {table_name} in database {database}.')
+                        #print(f'Checking, if record for item {item} in table: {table_name} in database {database} is the same as in upload file.')
                         if not record_is_same(database, table_name, headings[unique_item_index], item, table_column_names, item_values):
-                            print(f'Record is not the same, updating item in database with data from upload file.')  
+                            #print(f'Record is not the same, updating item in database with data from upload file.')  
                             update_record(database, table_name, headings[unique_item_index], item, table_column_names, item_values)
                         else:
-                            print(f'Record is the same, skipping to next line in upload file.')        
+                            #print(f'Record is the same, skipping to next line in upload file.')
+                            continue
                 else:
                     ## B] IF we want to insert each line from the file without checking, in item beeing inserted is already in datrabase. (will produce multiple records for each unique item)
                         # Insert the item into the table            
@@ -298,7 +298,7 @@ def insert_record(database=str, table_name=str, table_columns=list, item_values=
     # Insert into table
     cursor.execute(f'INSERT INTO {table_name} ({columns_str}) VALUES ({placeholders})', tuple(item_values))
 
-    print(f'Record succesfully inserted into database:')
+    # print(f'Record succesfully inserted into database:')
     # Check the newly added record
     
     # Last added record rowid
@@ -316,10 +316,17 @@ def insert_record(database=str, table_name=str, table_columns=list, item_values=
     # Close the connection
     conn.close()
 
-def delete_record(database=str, table_name=str, table_columns=list, item_values=list): # Function to Delete record from given table in given database.
-    # Record is identified by table colum names + values in these columns. Values order must match the table_columns order.
+    return result
+
+def insert_many_records(database=str, table_name=str, records_values=list, overwrite_by_columns=list, progress_callback=None): # Function to insert multiple new records into the table.
+    # Records values is a list of tuples, where order of vaules in tuples must match the table_columns order. Will not add record if identic record already in table.
+    # Optionaly can be passed list of columns. In that case, will check, if newly added record has same values in these columns with any record already in the table. 
+    # If yes → will consider the record in table as the same as one being added, and will update record already in database to match the added record. (This is for overwriting old records with nwe values)
     
-    print(f'Deleting record')
+    # Get column names of table records are being inserted into
+    #print(f'getting column names of destination table...')
+    table_column_names = get_table_columns(database, table_name)
+    #print(f'Columns in destination table: {", ".join(table_column_names)}')
 
     # Connect to the database
     conn = sqlite3.connect(database)
@@ -327,48 +334,101 @@ def delete_record(database=str, table_name=str, table_columns=list, item_values=
     # Create a cursor
     cursor = conn.cursor()
 
-    # Identify the record to delete in the table
+    # Insert the new item into the table
         
     # Destinations columns SQL clause str
-    columns_str = "=? AND ".join((f'"{t_c}"' for t_c in table_columns))
-    print(f'1 {columns_str}')
+    columns_str = ", ".join((f'"{t_c}"' for t_c in table_column_names))
+    #print(columns_str)
 
-    # Values to be inserted for record (must be is same order as column order)
-    print(f'2 {item_values}')
-
-    # Check if such record is in table in database
-    if record_exists(database, table_name, table_columns, item_values):        
-        
-        print(f'record found in database: {[table_columns[0]+":"+item_values[0] for tc in table_columns]}')
-
-        # Delete from table
-        cursor.execute(f'DELETE FROM {table_name} WHERE {columns_str}=? ', tuple(item_values))
-        print(f'Record succesfully deleted from database:')
+    # Values placeholdesr str
+    placeholders = ", ".join(["?" for c in table_column_names])
+    #print(placeholders)
     
-        # Check if the record was deleted
+    # Duplicate reocrd check - Mandatory
+    # Create the WHERE clause of the SQL statement to select columns from table in database to compare with criteria provided.
+    column_values_to_select_str = "=? AND ".join([f'"{name}"' for name in table_column_names])
+
+    # Overwrite existing record check - Optional
+    # Create the SQL statement to check if record from optional list already in database
+    overwrite_by_columns_to_select_str = "=? AND ".join([f'"{name}"' for name in overwrite_by_columns])
+    values_to_overwrite_by_indexes = [table_column_names.index(c) for c in overwrite_by_columns]
+
+    # Set up progress bar steps (depending on nr. of records to be processed.
+    count_records_to_process = len(records_values)
+    already_processed_records = 0
+
+    # Insert into table
+    # cursor.executemany(f'INSERT INTO "{table_name}" ({columns_str}) VALUES ({placeholders})', records_values)
+    # print(f'records_values: {records_values}')
+    print(f'celkem ke zpracovani: {count_records_to_process}')
+    for record in records_values:
+        already_processed_records += 1
+        # Progress the progress bar with 1% step
+        progress_callback(already_processed_records, count_records_to_process)
         
-        # Try to find record we deleted in table
-        cursor.execute(f'SELECT rowid, * FROM {table_name} WHERE {columns_str}=?', tuple(item_values))
-        result = cursor.fetchone()
-        print(f'Kontrola posleniho pridaneho zaznamu:')
-        if not result:
-            print(f'OK - po smazani zaznamu nezbyl v databazi zadny stejny zaznam.')
-        else:
-            print(f'POZOR - po smazani zaznamu zbyl v databazi dalsi stejny zaznam!')    
+        print(f'record:')
+        print(record)
+        # Check if such record already in database
+        #print(f'Kontroluju zda je stejny record uz v databazi.')
+        cursor.execute(f'SELECT rowid, * FROM "{table_name}" WHERE {column_values_to_select_str}=?', record)
+        exists = cursor.fetchall()
+        if exists:
+            print(f'Record {table_column_names}:{record} already exists in database, skipping to next record.')
+            print(exists)
+            continue
+        # if not, check if some records to ocverwrite
+        elif overwrite_by_columns:
+            #print(f'Record {table_column_names}:{record} not yet in database. Proceedning to the next check.')
+            # If so , try find any matching records already in table
+            values_to_check = [record[i] for i in values_to_overwrite_by_indexes]
+            #print(f'Kontroluji, jestli je potreba updatovat record uz v databazi pro vkladany record: {record}')
+            #print(f'Hledam shodu ve sloupcich: {overwrite_by_columns_to_select_str}, hledam hodnoty: {values_to_check}')
+            values_to_check=tuple(values_to_check)
+            #print(f'SQL statement na kontrolu shody:')
+            #print(f'SELECT rowid, * FROM "{table_name}" WHERE {overwrite_by_columns_to_select_str}=?')
+            cursor.execute(f'SELECT rowid, * FROM "{table_name}" WHERE {overwrite_by_columns_to_select_str}=?', values_to_check)    
+            exists = cursor.fetchall()
+            #print(exists)
+            # If any found → overwrite them
+            if exists:
+                #print(f'record with such parameters found, updating wiht new values')
+                values_with_where_values_at_end = [v for v in record] + list(values_to_check)
+                #print(f'Values for the UPDATE sql statement: {values_with_where_values_at_end}')
+                #print(f'SQL update statmenet:')
+                #print(f'UPDATE "{table_name}" SET {column_values_to_select_str}=? WHERE {overwrite_by_columns_to_select_str}=?')
+                cursor.execute(f'UPDATE "{table_name}" SET {column_values_to_select_str}=? WHERE {overwrite_by_columns_to_select_str}=?', tuple(values_with_where_values_at_end))
+            # Else, just insert record
+            else:       
+                #print(f'Record {table_column_names}:{record} not yet in database, adding record.') 
+                try:
+                    #print(f'INSERT INTO "{table_name}" ({columns_str}) VALUES ({placeholders})')
+                    cursor.execute(f'INSERT INTO "{table_name}" ({columns_str}) VALUES ({placeholders})', record)
+                except:                    
+                    print(f'Error: {record}') 
+        # Else just insert new record
+        else:       
+            #print(f'Record {table_column_names}:{record} not yet in database, adding record.') 
+            try:
+                cursor.execute(f'INSERT INTO "{table_name}" ({columns_str}) VALUES ({placeholders})', record)
+            except:
+                print(f'Error: {record}') 
 
-        # Save the changes
-        conn.commit()
-    else:
-        print(f'No such record found in database: {[table_columns[0]+":"+item_values[0] for tc in table_columns]}')
+    print(f'Records succesfully inserted into database: {database}')
 
+    # Save the changes
+    conn.commit()
     # Close the connection
     conn.close()
 
-def insert_many_records(database=str, table_name=str, records_values=list): # Function to insert multiple new records into the table. Records values is a list of tuples, where order of vaules in tuples must match the table_columns order.
+def insert_batch_records(database=str, table_name=str, records_values=list): # Function to insert multiple new records into the table.
+    # Records values is a list of tuples, where order of vaules in tuples must match the table_columns order. This function does not check, if any record of those beeing added is already in table.
+    # This does not handle duplicate records inserting.
+    # This function is ideal for initial data loading into new blank database, when we do not need to check, if added records already in table.
     
     # Get column names of table records are being inserted into
-    print(f'getting column names of destination table...')
+    #print(f'getting column names of destination table...')
     table_column_names = get_table_columns(database, table_name)
+    print(table_column_names)
     print(f'Columns in destination table: {", ".join(table_column_names)}')
 
     # Connect to the database
@@ -381,46 +441,24 @@ def insert_many_records(database=str, table_name=str, records_values=list): # Fu
         
     # Destinations columns SQL clause str
     columns_str = ", ".join((f'"{t_c}"' for t_c in table_column_names))
-    print(columns_str)
+    #print(columns_str)
 
     # Values placeholdesr str
     placeholders = ", ".join(["?" for c in table_column_names])
-    print(placeholders)
-
-    # Values to be inserted for record (must be is same order as column order)
-    # print(item_values)
-
-
-    # Insert into table
-    # cursor.executemany(f'INSERT INTO "{table_name}" ({columns_str}) VALUES ({placeholders})', records_values)
-    for record in records_values:
-        try:
-            cursor.execute(f'INSERT INTO "{table_name}" ({columns_str}) VALUES ({placeholders})', record)
-        except:
-            print(record) 
-
-    print(f'Records succesfully inserted into database:')
-    # Check the newly added record
+    #print(placeholders)
     
-    # Last added record rowid
-    # last_added_row_id = cursor.lastrowid
-    # print(f'posledni pridane id: {last_added_row_id}')
-
-    cursor.execute(f'SELECT rowid, * FROM {table_name}')
-    result = cursor.fetchall()
-    print(f'Kontrola pridanych zaznamu:')
-    #for r in result:
-        #print(r)
-    print(f'pridano {len(result)} zaznamu.')
-
+    # Insert into table
+    print(f'INSERT INTO "{table_name}" ({columns_str}) VALUES ({placeholders})')
+    input()
+    cursor.executemany(f'INSERT INTO "{table_name}" ({columns_str}) VALUES ({placeholders})', records_values)
+    print(f'{len(records_values)} records succesfully inserted into database: {database}')
 
     # Save the changes
     conn.commit()
-
     # Close the connection
     conn.close()
 
-def record_exists(database=str, table_name=str, table_columns=list, item_values=list): # Function to check, if specified record is already in given database, in given table.
+def item_exists(database=str, table_name=str, item_column_name=str ,item=str): # Function to check, if item is already in table
     
     # Connect to the database
     conn = sqlite3.connect(database)
@@ -428,17 +466,8 @@ def record_exists(database=str, table_name=str, table_columns=list, item_values=
     # Create a cursor
     cursor = conn.cursor()
 
-    # Destinations columns SQL clause str
-    columns_str = "=? AND ".join((f'"{t_c}"' for t_c in table_columns))
-    # print(columns_str)
-
-    # Values to be inserted for record (must be is same order as column order)
-    # print(item_values)
-    
-    # Try to find record which match specified values in specifed table columns
-    cursor.execute(f'SELECT rowid, * FROM {table_name} WHERE {columns_str}=?', tuple(item_values))
-    result = cursor.fetchone()
-    # print(result)
+    # Execute a SELECT statement to check if the item already exists
+    cursor.execute(f'SELECT * FROM "{table_name}" WHERE "{item_column_name}"=?', (item,))
 
     # Check if the SELECT statement returned any rows
     exists = cursor.fetchone() is not None
@@ -448,6 +477,83 @@ def record_exists(database=str, table_name=str, table_columns=list, item_values=
     conn.close()
 
     return exists
+
+def get_specific_record(database=str, table_name=str, table_columns=list, item_values=list): # Function to get specific record/records from database based on criteria passed to function. Provide list of columns and list of values for therse columns.
+    # Connect to the database
+    conn = sqlite3.connect(database)
+
+    # Create a cursor
+    cursor = conn.cursor()
+
+    # Execute a SELECT statement for record based on criteria provided  
+    
+    # Create the WHERE clause of the SQL statement to select columns from table in database to compare with criteria provided.
+    column_values_to_select_str = "=? AND ".join([f'"{name}"' for name in table_columns])
+    # print(column_values_to_select_str)
+
+    # Create the SELECT statement
+    cursor.execute(f'SELECT rowid, * FROM "{table_name}" WHERE {column_values_to_select_str}=?', tuple(item_values))
+    #print(f'SELECT rowid, * FROM "{table_name}" WHERE {column_values_to_select_str}=?', tuple(item_values))
+
+    # Fetch result of the query
+    result = cursor.fetchall()
+
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
+
+    return result
+
+def get_many_records(database=str, table_name=str, table_column_names_to_select_by=list, records_values_criteria_list=list): # Function to get all the records from database based on specified conditions for specified table columns. 
+    # record_values_criteria_list must be list of tuples with records for each record to be deleted in matching order as in target sql table. 
+
+    # remove duplicated records if any
+    records_criteria_set = list(set(records_values_criteria_list))
+    #print(records_criteria_set)
+
+    # Connect to database
+    conn = sqlite3.connect(database)
+
+    # Create cursor
+    cursor = conn.cursor()
+    
+    # colums str for select query
+    colums_to_select_by = ",".join([f'"{column_name}"' for column_name in table_column_names_to_select_by])
+
+    # ! There is maximum of 999 variables possible to be passed in the single SQL query statement. SO if more than that is passed into fucntion, Deletion needs to be batched.
+    # Values list to be passed into Query statement
+    #print(records_values_criteria_list)
+    criteria_values = [value for record in records_values_criteria_list for value in record]
+    #print(len(criteria_values), criteria_values)
+
+    # If big number of variables passed into function, split into batches.#
+    if len(criteria_values) > 999:
+        # Show ifo about batching
+        print(f'There are more than 999 criteria values for deletion → needs to be deleted in batches...')
+    # set batch size (500 here for better calculating)
+    batch_size = 500
+    select_criteria_values_batches = [criteria_values[i:i+batch_size] for i in range(0, len(criteria_values), batch_size)]
+    #print(f'SCVB: {select_criteria_values_batches}')
+    #input()
+
+    # Join batches to show complet selection list
+    all_records_selected = list()
+    for batch in select_criteria_values_batches:
+        # placeholder tuples for select query. (?,?) for each record tuple, where ? stands for values in given columns. For exp. ('680858-931',), ('680858-931',), → (?),(?) /  ('680858-931',"pn1"), ('680858-931',"pn2") → (?, ?),(?, ?) ...
+        placeholders_tuples = ", ".join([f'({"?"*len(records_values_criteria_list[0])})' for criteria_value in batch])
+        #print(f'final statement:')
+        print(f'SELECT rowid, * FROM "{table_name}" WHERE ({colums_to_select_by}) IN ({placeholders_tuples}), {batch}')
+
+        cursor.execute(f'SELECT rowid, * FROM "{table_name}" WHERE ({colums_to_select_by}) IN ({placeholders_tuples})', batch)
+        batch_records_selected = cursor.fetchall()
+        all_records_selected.extend(batch_records_selected)
+    print(f'{len(all_records_selected)} records selected: {all_records_selected}')    
+    #input()
+
+    # Close the connection
+    conn.close()
+
+    return all_records_selected
 
 def record_is_same(database=str, table_name=str, item_column_name=str ,item=str, table_column_names= list, item_values=list): # Function to check, if material is already in table and its description is the same
     # Connect to the database
@@ -479,7 +585,7 @@ def record_is_same(database=str, table_name=str, item_column_name=str ,item=str,
 
     return exists
 
-def update_record(database=str, table_name=str, item_column_name=str, item=str, table_column_names=list, item_values=list): # Updates values of record for existing item ina database - Function to update values of item already found in table, if same item with different values is beeing added to table
+def update_record(database=str, table_name=str, item_column_name=str, item=str, table_column_names=list, item_values=list): # Updates values of records for existing item in database - Function to update values of item already found in table, if same item with different values is beeing added to table
     print(f'Updating record...')
     # Connect to the database
     conn = sqlite3.connect(database)
@@ -493,7 +599,7 @@ def update_record(database=str, table_name=str, item_column_name=str, item=str, 
     # Create the SET SQL str statement (what columns we want to update in format x=?, y=? ...)    
     set_columns_str = "=?, ".join(f'"{t_c}"' for t_c in table_column_names)
     # print(f'SQL statement for SET columns to be updated:')
-    # print(set_columns_str+"=?")
+    # print(set_columns_str)
 
     # Add the item variable for the WHERE clause of SQL statement at the end of the list of new values, so that list matches the order of columns being updated.
     # print(f'List of new values without the WHERE item:')
@@ -502,14 +608,63 @@ def update_record(database=str, table_name=str, item_column_name=str, item=str, 
     # print(f'List of new values with the WHERE item added at the end:')
     # print(item_values)
 
+    # Check what records will be updated
+    cursor.execute(f'SELECT rowid, * FROM "{table_name}" WHERE "{item_column_name}"="{item}"')
+    result = cursor.fetchall()
+    print(f'Records to be updated: {result}')
+    row_ids_od_records_to_be_changed = [str(record[0]) for record in result]
+    print(row_ids_od_records_to_be_changed)
+
+    print(f'UPDATE "{table_name}" SET {set_columns_str}=? WHERE "{item_column_name}"=?', tuple(item_values))   
     cursor.execute(f'UPDATE "{table_name}" SET {set_columns_str}=? WHERE "{item_column_name}"=?', tuple(item_values))
     # Commit the transaction
     conn.commit()
 
-    # Check the updated record
-    cursor.execute(f'SELECT rowid, * FROM "{table_name}" WHERE "{item_column_name}"={item}')
-    result = cursor.fetchone()
-    print(f'Updated record: {result}')
+    # Check the records afer update
+    str_row_ids = ",".join(row_ids_od_records_to_be_changed)
+    cursor.execute(f'SELECT rowid, * FROM "{table_name}" WHERE rowid IN ({str_row_ids})')
+    result = cursor.fetchall()
+    print(f'Updated records: {result}')
+
+    # Close the cursor and connection
+    cursor.close()
+    conn.close()
+
+    # return updated records
+    return result
+
+def update_many_records(database=str, table_name=str, item_column_name=str, item=str, table_column_names=list, items_values_list=list): # Updates values of records for existing items in database - Function to update values of items already found in table, if same item with different values is beeing added to table
+    
+    ### NOT WORKING PROPERLY - NEEDS TO BE REDESIGNED WHEN NEEDED
+    
+    print(f'Updating many records...')
+    # Connect to the database
+    conn = sqlite3.connect(database)
+
+    # Create a cursor
+    cursor = conn.cursor()
+
+    # Update item with new values provided
+
+    # Create the SET SQL str statement (what columns we want to update in format x=?, y=? ...)    
+    set_columns_str = "=?, ".join(f'"{t_c}"' for t_c in table_column_names)
+
+    # for each record values list in input list, add the item at the end of the list, so that it corresponds with the SQL statemnet with WHERE clause. Then transform each values list into tuple for better sql performance.
+    for i, rv in enumerate(items_values_list):
+        # find what inex have the comlumn of item beeing updated
+        index_where_column = table_column_names.index(item_column_name)        
+        item = rv[index_where_column]        
+        items_values_list[i] = tuple(rv.append(item))        
+
+    # print(f'UPDATE "{table_name}" SET {set_columns_str}=? WHERE "{item_column_name}"=?', tuple(item_values))   
+    cursor.executemany(f'UPDATE "{table_name}" SET {set_columns_str}=? WHERE "{item_column_name}"=?', items_values_list)
+    
+    # Commit the transaction
+    conn.commit()
+
+    # print how many records updated
+    print(f'Records updated succesfully')
+    print(f'Count updated records: {len(items_values_list)}')
 
     # Close the cursor and connection
     cursor.close()
@@ -532,22 +687,19 @@ def delete_table(database=str, table_name=str): # Deletes specified table from s
         print(f'No such table with name: {table_name} found in database {database}. Cannot delete table.')
         return
 
-    # Inform user, that he is about to delete specified table from database
-    print(f'\nCAREFUL! You are about to delete table: {table_name} from database: {database}\n')    
-
     # Get number of records i table in database
     n = get_count_records_in_table(database, table_name)
 
     # Ask user confirmation of deleting table
-    print(f'Are you sure, you want to delete table: {table_name} from database {database}?\nThis cannot be undode, table with all its records will be lost.')
+    print(f'Are you sure, you want to delete teble: {table_name} from database {database}?\nThis cannot be undode, all records in table will be lost.')
     i = ""
     while i not in ["e", "s"]:
         i=input(f'Confirm D[E]leting or [S]torno Deleting :').lower()
 
-    print(i)
+    #print(i)
     # End deletion, if Storned by user
     if i == "s":
-        print(f'Deletion aborted by user. Table {table_name} remains unchanged in database.\n')
+        print(f'Deletion aborted by user. Table {table_name} remains unchanged in database.')
         return 
     
     # Else, drop table from database
@@ -555,8 +707,179 @@ def delete_table(database=str, table_name=str): # Deletes specified table from s
 
     # Commint the changes to database
     conn.commit()
-    print(f'Table {table_name} succesfully deleted from database {database}\n')
+    print(f'Table {table_name} succesfully deleted from database {database}')
 
+    # Close the connection
+    conn.close()
+
+def delete_record(database=str, table_name=str, table_column_names=list, item_values=list): # Deletes record from table where record values matches the condition specified.
+    # Connect to database
+    conn = sqlite3.connect(database)
+
+    # Create cursor
+    cursor = conn.cursor()
+
+    # Create the WHERE clause of the SQL statement to select columns from table in database to compare with criteria provided.
+    column_values_to_select_str = "=? AND ".join([f'"{name}"' for name in table_column_names])
+
+    # Check if such recotd exists in target database
+    records = get_specific_record(database, table_name, table_column_names, item_values)
+    if not records:
+        print(f'WARNING! No such record in database, nothing deleted.')
+        return
+
+    # Construct the SQL statement
+    cursor.execute(f'DELETE FROM "{table_name}" WHERE {column_values_to_select_str}=?', tuple(item_values))
+
+    # Commit the transaction
+    conn.commit()
+
+    # Close the connection
+    conn.close()
+
+    print(f'records: {records} succesfully deleted from database: {database}')
+    return records
+
+def delete_many_records(database=str, table_name=str, table_column_names=list, records_values_list=list, progress_callback=None): # Deletes records from table where records values matches the condition specified.
+    # record_values_list must be list of tuples with records for each record to be deleted in matching order as in target sql table. 
+
+    # remove duplicated records if any
+    records_values_set = list(set(records_values_list))
+    
+    # Connect to database
+    conn = sqlite3.connect(database)
+
+    # Create cursor
+    cursor = conn.cursor()
+
+    # Create the WHERE clause of the SQL statement to select columns from table in database to compare with criteria provided.
+    column_values_to_select_str = "=? AND ".join([f'"{name}"' for name in table_column_names])
+
+    # Check what records will be deleted 
+    # ! There is maximum of 999 variables possible to be passed in the single SQL query statement. SO if more than that is passed into fucntion, Deletion needs to be batched.
+
+    # colums str for select query
+    colums_str = ",".join([f'"{name}"' for name in table_column_names])
+    #print(f'select columns q part: {colums_str}')
+    #print(f'select placeholders q part: {colums_str}')
+    # Values list to be passed into Query statement
+    #print(f'input r v l: {records_values_list}')
+    values = [v for r in records_values_list for v in r]
+    print(len(values))
+
+    # If big number of variables passed into function, split into batches.
+    if len(values) > 999:
+        # Show ifo about batching
+        print(f'There are more than 999 criteria values for deletion → needs to be deleted in batches...')
+    # set batch size (500 here for better calculating)
+    batch_size = 500
+    select_values_batches = [values[i:i+batch_size] for i in range(0, len(values), batch_size)]
+    delete_values_batches = [records_values_list[i:i+batch_size] for i in range(0, len(records_values_list), batch_size)]
+    print(f'There are: {len(delete_values_batches)} delete batches, each with: {batch_size} records to delete.')
+
+    # Set up progress bar steps (depending on nr. of batches to be processed 1. all select batches + 2. all delete batches. → len(batches)*2 bude pocet dilu k progressu)
+    count_progress_parts = len(select_values_batches)
+    already_processed_parts = 0
+
+    # Join batches to show completed deletion list
+    records_to_be_deleted = list()
+    for batch in select_values_batches:
+        # placeholder tuples for select query. (?,?) for each record tuple, where ? stands for values in given columns. For exp. ('680858-931',), ('680858-931',), → (?),(?) /  ('680858-931',"pn1"), ('680858-931',"pn2") → (?, ?),(?, ?) ...
+        pt = ", ".join([f'({"?"*len(records_values_list[0])})' for rv in batch])
+        #print(f'final statement:')
+        #print(f'SELECT rowid, * FROM "{table_name}" WHERE ({colums_str}) IN ({pt}), {batch}')
+        cursor.execute(f'SELECT rowid, * FROM "{table_name}" WHERE ({colums_str}) IN ({pt})', batch)
+        batch_records_to_be_deleted = cursor.fetchall()
+        records_to_be_deleted.extend(batch_records_to_be_deleted)
+        
+        # Prgress the status (select batches accounts for 0-50 % progress)
+        already_processed_parts +=1
+        try:
+            progress_callback(already_processed_parts, count_progress_parts)
+        except:
+            pass        
+        print(f'{len(records_to_be_deleted)} records will be deleted')         
+    # If nothing to be deleted → return error info
+    if not records_to_be_deleted:
+        print(f'WARNING! No record matches given criteria → Nothing deleted.')
+        try:
+            progress_callback(1, 1)
+        except:
+            pass       
+        return
+
+    # Else delete records matchind records in each batch
+    for i, batch in enumerate(delete_values_batches):
+        print(f'Deleteing BATCH nr.: {i+1}')
+        # Construct the SQL statement
+        cursor.executemany(f'DELETE FROM "{table_name}" WHERE {column_values_to_select_str}=?', batch)
+        # Commit the transaction
+        conn.commit()
+        print(f'OK - BATCH nr.: {i+1} succesfully deleted.')
+
+        # Prgress the status (delete batches accounts for 50 -100 % progress)
+        already_processed_parts +=1
+        try:
+            progress_callback(already_processed_parts, count_progress_parts)
+        except:
+            pass    
+
+    # Close the connection
+    conn.close()
+
+    print(f'{len(records_to_be_deleted)} records:  succesfully deleted from database: {database}')
+    return records_to_be_deleted
+
+def find_duplicate_records(database=str, table_name=str):
+    # Connect to the database
+    conn = sqlite3.connect(database)
+
+    # Create a cursor
+    cursor = conn.cursor()
+
+    # Get table columns
+    tc = get_table_columns(database, table_name)
+
+    # Table columns STR statement
+    str_tc = ", ".join([f'"{c}"' for c in tc])
+    # print(str_tc)
+
+    # Try to find all duplicate records in table in given database
+    cursor.execute(f'SELECT {str_tc}, COUNT(*) FROM "{table_name}" GROUP BY {str_tc} HAVING COUNT(*) > 1')
+    duplicates = cursor.fetchall()
+    
+    # Close connection
+    conn.close()    
+    return duplicates
+
+def delete_duplicate_records(database=str, table_name=str): # Function to find duplicate records in given table in given database and delete all but record with lowest rowid.
+    print(f'Deleting duplicate records...')
+    # Connect to the database
+    conn = sqlite3.connect(database)
+
+    # Create a cursor
+    cursor = conn.cursor()
+
+    # Get table columns
+    tc = get_table_columns(database, table_name)
+
+    # Table columns STR statement
+    str_tc = ", ".join([f'"{c}"' for c in tc])
+    # print(str_tc)
+
+    # Try to find all duplicate records in table in given database
+    cursor.execute(f'SELECT {str_tc}, COUNT(*) FROM "{table_name}" GROUP BY {str_tc} HAVING COUNT(*) > 1')
+    duplicates = cursor.fetchall()
+    #print(duplicates)
+
+    #COnstruct the DELETE statement. This statement wil delete all records from table based on their rowids, where it first makes a group of records with same values for all columns and then deletes all records but one with lowest rowid. 
+    # cursor.execute(f'''
+    # DELETE FROM "{table_name}" WHERE rowid NOT IN (
+    #     SELECT MIN(rowid) FROM "{table_name}" GROUP BY {str_tc})
+    # ''')
+
+    # Commit the changes
+    conn.commit()
     # Close the connection
     conn.close()
 
@@ -567,16 +890,17 @@ def create_index_on_column(database=str, table_name=str, column_name=str): # Cre
     
     # Create a cursor
     cursor = conn.cursor()
-    print(column_name)
+    #print(column_name)
     
     # Naming the index
     c_str = [str.strip() for str in column_name.split(" ")]
+    c_str.insert(0, table_name)
     c_str.append("index")
     c_str = "_".join(c_str)
     print(c_str)
     
     # Create index
-    cursor.execute(f'CREATE INDEX {c_str} ON {table_name} ("{column_name}")')
+    cursor.execute(f'CREATE INDEX {c_str}_3 ON {table_name} ("{column_name}")')
 
     # commiting the changes
     conn.commit()
@@ -600,7 +924,7 @@ def vacuum_database(database=str): # Somehow cleans and rebuilds the database fi
     conn.commit()
     conn.close()
 
-def get_pn_in_monuments(data=list): # 
+def get_pn_in_monuments(data=list): # Takes list of lines of monument BOM and costructs a list of unique monument: PN pairs. Return list of all unique PNs and their final monumnet.p1:m1, p2:m1, p1:m2, p2:m2 ...
 
     # list of tuples all pns with its monuments
     all_pn = list()

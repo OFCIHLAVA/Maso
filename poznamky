@@ -1,0 +1,92 @@
+0. Carove kody: (BC = BarCode)
+	Carove kodu budou representovat jednotlive zaznamy v databazi zbozi, kdy budou obsahovat referenci konkretniho id nejakeho zazanamu.
+	
+	Carove kody budou zvlast pro:
+	zaznamy POLOZEK - 4 digits str → 0001 = id 1, 0123 = id 123 atd. MAX 9999
+	zaznamy DRUHU - 4 digits str → 0001 = id 1, 0123 = id 123 atd. MAX 9999
+	zaznamy TYPU - 4 digits str → 0001 = id 1, 0123 = id 123 atd. MAX 9999
+	zaznamy JEDNOTEK - 4 digits str → 0001 = id 1, 0123 = id 123 atd. MAX 9999
+
+	zaznamy PRODUKTU - 12 digits, kombinace BC polozky + BC druhu + BC typu str. 000109010031 = id 1 + id 901 + id 31 atd. Poradi musi byt fixne polozka+druh+typ.
+
+TODO
+	datum naskladneni / porazky (6 digit BC ve formatu YYYYMMDD  EX. 20230630)
+	velikost baleni / vaha (7 digit BC string) 1. pozice oznacuje zda BC hodnota vyjadruje int / float hodnotu. 2.-7. pozice oznacuje hodnotu. 
+		Examples - "_" pouze pro lepsi citelnost. V praxi pak tam neni.
+		pro cela cisla Example 9_0000325 → 325
+		pro float cisla Example 0_000325 → 3.25 (posledni 2 pozice jsou desetinna mista - 2 digits precision)
+		Z toho vyplyva max zapsatelna hodnota pro INT → 9999999 a max hodnota pro FLOAT → 99999.99 (to by pro nase ucely melo stacit.)
+
+
+1. Databaze
+	1.1 Vytvareni nove polozky
+		Uzivatel bude mit moznost zalozit novou "polozky" - nazev pro neco. Example: polozka: "Vejce 100 g" atp. Polozky je nutne zakladat, aby se z nich dale daly skladat produkty.
+		1.1.1 Uzivatel zada pro vytovreni nove polozky jeji nazev, jak chce aby se dana polozka jmenovala.
+		1.1.2 User input se ocisti o trailing spaces a porovna s databazi, zda uz polozka se stejnym nazvem neexistuje.
+			+ Pokud uz takova existuje (pro porovnani se ignoruje lower X upper characters) → "OnDra" se povazuje za ekvivalentni "ondra".
+				Nic se nepridava.
+			+ Jinak se prida tato nova polozka do tabulky polozek a vygeneruje se ji carovy kod na zaklade jejiho ID.
+
+	1.2 Vytvareni noveho druhu polozky (princip stejny jako 1.1 )
+		Uzivatel bude mit moznost zalozit novy "druh" - katogorii pro neco. Example: polozka: "Vejce 100 g", druh: "jidlo", atp. Druhy je mozne zakladat, aby se z nich dale daly skladat produkty.
+		1.2.1 Uzivatel zada pro vytovreni noveho druhu jeho nazev, jak chce aby se dany druh jmenoval.
+		1.2.2 User input se ocisti o trailing spaces a porovna s databazi, zda uz takovy druh se stejnym nazvem neexistuje.
+			+ Pokud uz existuje (pro porovnani se ignoruje lower X upper characters) → "OnDra" se povazuje za ekvivalentni "ondra".
+				Nic se nepridava.
+			+ Jinak se prida tenot novy druh do tabulky druhu a vygeneruje se mu carovy kod na zaklade jeho ID.
+
+	1.3 Vytvareni noveho typy polozky (princip stejny jako 1.1 )
+		Uzivatel bude mit moznost zalozit novy "typ" -  subkatogorii pro neco. Example: polozka: "Vejce 100 g", druh: "jidlo", typ: "slepice" . Typ je mozne zakladat, aby se z nich dale daly skladat produkty.
+		1.3.1 Uzivatel zada pro vytovreni noveho Typu jeho nazev, jak chce aby se dany Typ jmenoval.
+		1.3.2 User input se ocisti o trailing spaces a porovna s databazi, zda uz takovy Typ se stejnym nazvem neexistuje.
+			+ Pokud uz existuje (pro porovnani se ignoruje lower X upper characters) → "OnDra" se povazuje za ekvivalentni "ondra".
+				Nic se nepridava.
+			+ Jinak se prida tento novy Typ do tabulky Typ a vygeneruje se mu carovy kod na zaklade jeho ID.
+	
+	1.4 Vytvareni nove jednotky (princip stejny jako 1.1 )
+		Uzivatel bude mit moznost zalozit novou "jednotku" - jednotky, ve kterych se dana vec meri. Example: "ks", "kg", "m2" atp. . Jednotky je nutne zakladat, aby se z nich dale daly skladat produkty.
+		1.4.1 Uzivatel zada pro vytovreni nove jednotky jeji nazev, jak chce aby se dana jednotka jmenovala, pripadne nepovinne nejakou textovou poznamku.
+		1.4.2 User input nazvu jednotky se ocisti o trailing spaces a porovna s databazi, zda uz takova jednotka se stejnym nazvem neexistuje.
+			+ Pokud uz existuje (pro porovnani se ignoruje lower X upper characters) → "OnDra" se povazuje za ekvivalentni "ondra".
+				Nic se nepridava.
+			+ Jinak se prida tato nova jednotka do tabulky jednotek a vygeneruje se ji carovy kod na zaklade jeji ID.			
+
+			
+	1.5 Vytvareni noveho produktu
+		Uzivatel bude mit moznost si "poskladat" novy produkt kombinaci ze 4 poli: Jmeno, jednotky, druh, typ a cena. Vsechny tyto hodnoty krome ceny, je treba nejprve zalozit v databazi a az nasledne
+		je z nich mozne skladat produkt.
+		
+		1.5.1 Zadavani noveho produktu bude probihat vybranim jedne z uz existujicich moznosti pro JMENO, JEDNOTKY, DRUH, TYP CENA.
+		1.5.2 Nasledne se pro zadane "casti" itemu vyhledaji informace o jejich jmenu a carovem kodu.
+		1.5.3 Z techto informaci se posklada nova polozka ve tvaru → produkt: "JMENO DRUH TYP", carovy_kod: "CarovyKodJmenaCarovyKodDruhuCarovyKodTypu", jednotky: id zadanych jednotek
+			  	example: Ondra kluk zrzavy, 000100030004, 1 / Ondra, 000100000000, 1 / Ondra zrzavy 000100000004, 1 (None value v nazvu = 0000 hodnota v carovem koddu, posledni hodnota je id jednotky) 
+		1.5.4 ulozeni produktu do tabulky "produkty"
+			+ Jeste pred ulozenim check, ze identicky produkt uz neni v tabulce "produkty"
+				Pokud neni vytvori se, Pokud uz by byl → nevlozi se znovu.			
+				Pod timto nazvem se dany produkt ulozi do databaze do tabulky "produktu" se zadanym nazvem a pridelenym carovym kodem (reprezentace kombinaci ID jednotlivych casti, ze kterych je produkt sestaven.)
+					+ Dale se do tabulky historie cen ulozi zaznam pro ID tohoto produktu, kde bude informace o cene s jakou byl item vytvoren a s dnesnim datumem.
+
+TODO ! PRidavani duplicitnich zazanamu do tabulek vyse !!! ↑
+
+
+
+
+TODO ! Mazani typu / druhu
+	Pokud zpetne budu mazat nejaky druh / typ z tabulek produktu. Muze se stat, ze v tabulce produktu uz budou zalozene nejake produkty s temito typy / druhy.
+	V takovem pripade bude potreba tyto produkty take upravit (jejich nazev a barcode). Pokud takovouto upravou vznikne duplicitni zaznam v tabulce produktu
+	(stane se z toho produkt se stejnym jsmenem a barcodem, jako uz v tabulce je.) Je potreba tento produkt record smazat aby nevznikaly duplicitni zaznamy produktu.
+	Priklad: 
+	v tabulce produktu budou 2 zaznamy:
+	id 1, polozka: Ovce, druh: None, typ: None | Barcode: 0001 0000 0000
+	id 2, polozka: Ovce, druh: kuze, typ: None | Barcode: 0001 0002 000
+	Pokud ted smazu druh kuze, je bude potreba upravit record id 2 takto →
+	id 2, polozka: Ovce, druh: None, typ: None | Barcode: 0001 0000 000
+	Timto vznikne record duplicitni k recordu id 1. Toto neni pripustne → je potreba record id 2 smazat
+
+TODO ! Pricebook tabulek
+	Vytvorit tabulku cen, ktera bude zachycovat cenzy jednotlivych produktu v case. Bude uchovavat i historickou informaci o cenach od kdy platily.
+	id INT NN , id produktu INT NN, cena czk real, datum nastaveni date (text "yyyy-mm-dd"), datum nahrazeni (text "yyyy-mm-dd").
+	Udaj cene lze vytvorit pouze k existujicimu produktu (z tabulky "produkty")
+	• Ukladat zaznamy o cene jednotlivych ID produktu. Vest tim historii cen. Pokud se na danem ID polozky cena zmeni → pridat novy zaznam s datumem zmeny a ke staremu zaznamu pridat info o konci platnosti ceny.
+
+
