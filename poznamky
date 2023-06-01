@@ -51,6 +51,11 @@ TODO
 				Nic se nepridava.
 			+ Jinak se prida tato nova jednotka do tabulky jednotek a vygeneruje se ji carovy kod na zaklade jeji ID.			
 
+HOTOVO - POPSAT Uprava Polozek, jednotek. druhu, typu.
+	Umoznit userovi upravit si nazev nektereho zaznamu ze kterych se stavi produkty.
+	Pri takove uprave je treba upravit i relevantni data aby vse sedelo.
+
+
 			
 	1.5 Vytvareni noveho produktu
 		Uzivatel bude mit moznost si "poskladat" novy produkt kombinaci ze 4 poli: Jmeno, jednotky, druh, typ a cena. Vsechny tyto hodnoty krome ceny, je treba nejprve zalozit v databazi a az nasledne
@@ -66,7 +71,24 @@ TODO
 				Pod timto nazvem se dany produkt ulozi do databaze do tabulky "produktu" se zadanym nazvem a pridelenym carovym kodem (reprezentace kombinaci ID jednotlivych casti, ze kterych je produkt sestaven.)
 					+ Dale se do tabulky historie cen ulozi zaznam pro ID tohoto produktu, kde bude informace o cene s jakou byl item vytvoren a s dnesnim datumem.
 
-TODO ! PRidavani duplicitnich zazanamu do tabulek vyse !!! ↑
+	? Pri zadavani vsech typu hondnot vyse do databaze je osetreno vkladani novych zaznamu se stejnym nazvem aby se zamezilo dupicitam.
+
+	1.6 Tabulka historie cen
+		Vytvorit tabulku cen, ktera bude zachycovat cenzy jednotlivych produktu v case. Bude uchovavat i historickou informaci o cenach od kdy platily.
+		id INT NN , id produktu INT NN, cena czk real, datum nastaveni date (text "yyyy-mm-dd"), datum nahrazeni (text "yyyy-mm-dd").
+		Udaj cene lze vytvorit pouze k existujicimu produktu (z tabulky "produkty")
+	 	Ukladat zaznamy o cene jednotlivych ID produktu. Vest tim historii cen. Pokud se na danem ID polozky cena zmeni → pridat novy zaznam s datumem zmeny a ke staremu zaznamu pridat info o konci platnosti ceny.
+
+		V databazi bude tabulka zachycujici historii cen jednotlivych produktu. Vzdy bude obsahovat zaznam pro dane ID produktu s aktualni cenou a vsechny a take zaznamy pro vsechny 
+		predchozi ceny, ktere dany produkt mel. Myslenkou je, ze bude msozne zpetne sledovat cenu daneho produktu v case.ABORT
+
+		1.6.1 Nove zaznamy se vytvori automaticky, jakmile uzivatel vytvori novy produkt. V tu chvili se vytvori zaznam s ID daneho produktu,cenou s jakou byl produkt vytvoren a datumem vytvoreni.
+			Druhym zpusobem jak muze vzniknout novy zaznam je, ze se zmeni cena na nekterem produktu. Puvodni cenova linka se ulozi do historie a vytvori se nova aktualni cenova linka s novym datumem pro dane ID produktu.ABORT
+		1.6.2 Uzivatel ma moznost menit cenu jednotlivych produktu. Pokud se tak stane. Stavajici price history linka se upravi tak, ze se vyplni hodnota pro "datum zneplatneni" tim se
+			oznaci jako uz neplatna linka. Namisto ni se vytvori nova akttivni price linka, ktera bude od ted platit a bude mit novou zmenenou hodnotu ceny.
+
+	? Tabulka historie cen umoznuje zaznamy s duplicitnimi hodnotami - (cena se muze zmenit vicekrat behem jednoho dne a cena se muze zmenit na hodnotu kterou u z produkt mel.)
+
 
 
 
@@ -83,10 +105,5 @@ TODO ! Mazani typu / druhu
 	id 2, polozka: Ovce, druh: None, typ: None | Barcode: 0001 0000 000
 	Timto vznikne record duplicitni k recordu id 1. Toto neni pripustne → je potreba record id 2 smazat
 
-TODO ! Pricebook tabulek
-	Vytvorit tabulku cen, ktera bude zachycovat cenzy jednotlivych produktu v case. Bude uchovavat i historickou informaci o cenach od kdy platily.
-	id INT NN , id produktu INT NN, cena czk real, datum nastaveni date (text "yyyy-mm-dd"), datum nahrazeni (text "yyyy-mm-dd").
-	Udaj cene lze vytvorit pouze k existujicimu produktu (z tabulky "produkty")
-	• Ukladat zaznamy o cene jednotlivych ID produktu. Vest tim historii cen. Pokud se na danem ID polozky cena zmeni → pridat novy zaznam s datumem zmeny a ke staremu zaznamu pridat info o konci platnosti ceny.
-
+TODO ! Navrhnout 2 page app produkt handling
 

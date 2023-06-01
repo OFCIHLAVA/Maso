@@ -55,9 +55,10 @@ create_table(
     "produkty",
     """
     id INTEGER PRIMARY KEY,
-    carovy_kod TEXT NOT NULL,
-    produkt TEXT NOT NULL,
+    polozka_id INTEGER NOT NULL,
     jednotky_id INTEGER NOT NULL,
+    druh_id INTEGER,
+    typ_id INTEGER,
     cena_czk REAL
     """
     )  
