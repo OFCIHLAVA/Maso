@@ -46,15 +46,15 @@ shop_controls.grid(row=0, column=1, sticky='nsew', padx=10, pady=20)
 
 
 
-# Design item being sold line (frame with labels probably)
-# Test item lines
-for i in range(20):
-    item_line = ItemLine(items_list, {"id": 1,
-                                          "icon_url":r"C:\Users\ondrej.rott\Documents\Python\MASO\Images\icon.gif",
-                                          "name":"ovce",
-                                          "price":12.5,
-                                          "units":"ea",
-                                          "stock":250
-                                          }, items_footer)
+# # Design item being sold line (frame with labels probably)
+# # Test item lines
+# for i in range(20):
+#     item_line = ItemLine(items_list, {"id": 1,
+#                                           "icon_url":r"C:\Users\ondrej.rott\Documents\Python\MASO\Images\icon.gif",
+#                                           "name":"ovce",
+#                                           "price":12.5,
+#                                           "units":"ea",
+#                                           "stock":250
+#                                           }, items_footer)
 
 app_window.mainloop()

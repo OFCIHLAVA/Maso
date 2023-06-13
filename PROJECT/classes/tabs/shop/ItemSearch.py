@@ -4,8 +4,12 @@ import sqlite3
 
 class ItemSearch(customtkinter.CTkFrame):
     def __init__(self, master=None, **kwargs):
-        super().__init__(master=master, **kwargs)
-        self.pack(side="top", pady=10, padx=5, fill="both", expand=True)
+        super().__init__(master=master, height=150, **kwargs)
+        #self.pack(side="top", pady=10, padx=5, fill="both")
+        self.grid(row=1, column=0, sticky="ew")
+        self.grid_columnconfigure(0, weigh=1)
+        
+        
         # Set database path
         self.database_path = r"C:\Users\ondrej.rott\Documents\Python\MASO\inventory.db"
         # Dummy list database options
@@ -14,34 +18,48 @@ class ItemSearch(customtkinter.CTkFrame):
         self.already_selected = []
         # Search results for autosuggestion when searching
         self.results = []
-        # Create search window
-        self.search_window = customtkinter.CTkEntry(self, text_color="grey", width=300)
+        
+        # Quick bar label
+        self.quick_bar_label = customtkinter.CTkLabel(self, text="↓ SEARCH PRODUKT ↓", font=("roboto", 12, "bold"))
+        self.quick_bar_label.grid(row=0, column=0, sticky='nsew', padx=5, pady=10)
+        
+        # Create search window inside inner container Frame
+        self.search_window = customtkinter.CTkEntry(self, text_color="grey")
+        self.search_window.grid(row=1, column=0, sticky="ew")
+         
+        # Create results frame
+        self.results_frame = customtkinter.CTkFrame(self, height=80,fg_color="#2D2D2D")
+        self.results_frame.grid(row=2, column=0, sticky="ew")
+
         # Binding for placeholder to search window
         self.search_window.bind("<FocusIn>", self.clear_placeholder_text)
         self.search_window.bind("<FocusOut>", self.set_placeholder_text)
         # Binding the auto updating of options as you type into search window (auto suggestions)
         self.search_window.bind("<KeyRelease>", self.update_search_results)
-        self.search_window.pack()
+
         # Create ListBox for search results
-        self.search_results_listbox = tkinter.Listbox(self)
-        self.set_placeholder_text() 
+        self.search_results_listbox = tkinter.Listbox(self.results_frame, height=5)
+        # Create scrollbar for listbox
+        #self.search_results_scrollbar = customtkinter.CTkScrollbar(self.results_frame)
+        #self.search_results_scrollbar.pack(side=customtkinter.RIGHT, fill=customtkinter.Y)
+
         # Bind the ListBox selection event to a function
         self.search_results_listbox.bind('<<ListboxSelect>>', self.on_listbox_select)
-        # Dummy entry for focus out testing
-        textEntry = customtkinter.CTkEntry(self).pack()
+
+        self.set_placeholder_text() 
 
     def clear_placeholder_text(self, event):
         print("focusuju in")
         self.search_window.delete(0, 'end')
         print(self.search_window.get())
-        self.search_window.configure(text_color="black")
+        self.search_window.configure(text_color="white")
         self.update_search_results(event)
     
     def set_placeholder_text(self, *args):
         print("focusuju out a nastavuju placeholder")
         self.search_results_listbox.pack_forget()
         self.search_window.delete(0, "end")
-        self.search_window.insert(0, "Hledat produkt")
+        self.search_window.insert(0, "Hledat produkt...")
         self.search_window.configure(text_color="grey")        
 
     def on_listbox_select(self, event):
@@ -86,21 +104,11 @@ class ItemSearch(customtkinter.CTkFrame):
                     self.search_results_listbox.insert(tkinter.END, result)
                 # Show the ListBox if it's not currently visible
                 if not self.search_results_listbox.winfo_viewable():
-                    self.search_results_listbox.pack()
+                    self.search_results_listbox.pack(fill="x", expand=True)
             # If nothing else can be selected → hide options list
             else:
                 if text_to_search_for:
                     self.search_results_listbox.forget()               
-
-
-if __name__ == "__main__":
-    root = customtkinter.CTk()
-    search = ItemSearch(root)
-    root.mainloop()
-import tkinter
-import customtkinter
-import sqlite3
-
 
 
 if __name__ == "__main__":
