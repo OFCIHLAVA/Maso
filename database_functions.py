@@ -418,11 +418,30 @@ if __name__ == "__main__":
     database_path = r"C:\Users\ondrej.rott\Documents\Python\MASO\inventory.db"
 
     # SHow record in table 
-    # create_new_polozka("Ondra")
-    # create_new_druh("kluk")
-    # create_new_typ("zrzek")
+    create_new_polozka("Vejce")
+    create_new_polozka("Ovce")
+    create_new_polozka("Med")
+
+    create_new_druh("kachna")
+    create_new_druh("slepice")
+    create_new_druh("kvetovy")
+    create_new_druh("pekarsky")
+    create_new_druh("maso")
+    create_new_druh("vlna")
+
+    create_new_druh("lucni")
+
+
+    create_new_typ("S")
+    create_new_typ("M")
+
+    create_new_typ("Poloskadky")
+
+    create_new_typ("")
+
     # create_new_jednotka("ea", "jednotka s popisem")
-    create_new_jednotka("kg")
+    create_new_jednotka("m")
+    create_new_jednotka("m2")
 
     sqllite.show_all_records_database_in_table(database_path, "polozky_data")
     sqllite.show_all_records_database_in_table(database_path, "druh_data")
@@ -430,12 +449,21 @@ if __name__ == "__main__":
     sqllite.show_all_records_database_in_table(database_path, "jednotky")
     
 
-    updated_create_new_produkt(1,1,typ_id=1, cena_czk=35.216546)
-
+    updated_create_new_produkt(2,1,typ_id=1, cena_czk=35.216546)
+    updated_create_new_produkt(3, 3,6,3)
+    updated_create_new_produkt(1, 1,1,1)
+    updated_create_new_produkt(1, 2,1,1)
+    updated_create_new_produkt(1, 3,1,1)
+    updated_create_new_produkt(1, 1,2,1)
+    updated_create_new_produkt(1, 1,3,1)
+    updated_create_new_produkt(2, 1,1,1)
+    updated_create_new_produkt(2, 2,1,1)
+    updated_create_new_produkt(2, 3,1,1)
+#
     sqllite.show_all_records_database_in_table(database_path, "produkty")
-    change_product_price(1, 50.000)
-    edit_jednotka_name(1, "hovno")
-    change_produkt_jednotky(1, 2)
-
-    sqllite.show_all_records_database_in_table(database_path, "produkty")
-    sqllite.show_all_records_database_in_table(database_path, "historie_cen")
+    #change_product_price(1, 50.000)
+    #change_produkt_jednotky(1, 2)
+    #edit_jednotka_name(1, "hovno")
+#
+    #sqllite.show_all_records_database_in_table(database_path, "produkty")
+    #sqllite.show_all_records_database_in_table(database_path, "historie_cen")

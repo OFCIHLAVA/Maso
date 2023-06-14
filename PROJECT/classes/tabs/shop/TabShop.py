@@ -19,10 +19,10 @@ class TabShop(CTkFrame):
 
         # Create headings items sold
         self.headings = ItemsHeadings(self.left_side)
-        # Create list if sold items
-        self.items = ItemList(self.left_side)
         # Create footer
         self.footer = Footer(self.left_side)
+        # Create list if sold items
+        self.items = ItemList(self.left_side, self.footer)
 
         ## Create right side - shop controls
         self.right_side = CTkFrame(self, fg_color="#2D2D2D")
@@ -39,6 +39,9 @@ class TabShop(CTkFrame):
         self.item_search = ItemSearch(self.right_side)
         # # Create sell bar
         self.sell_bar = SellBar(self.right_side)
+
+        # Set instance visibility
+        self.register_quickbar_observer(self.items)
         
 
     def configure_app_resizing(self):
@@ -46,4 +49,9 @@ class TabShop(CTkFrame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=2)
         self.grid_columnconfigure(1, weight=1)
+    
+    def register_quickbar_observer(self, observer):
+        self.quick_bar.register_observer(observer)
+
+
     

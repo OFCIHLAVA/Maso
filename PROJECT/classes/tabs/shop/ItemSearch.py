@@ -1,10 +1,11 @@
 import tkinter
 import customtkinter
 import sqlite3
+from functions.shop_tab_functions.quickbar_functions import get_available_products
 
 class ItemSearch(customtkinter.CTkFrame):
     def __init__(self, master=None, **kwargs):
-        super().__init__(master=master, height=150, **kwargs)
+        super().__init__(master=master, **kwargs)
         #self.pack(side="top", pady=10, padx=5, fill="both")
         self.grid(row=1, column=0, sticky="ew")
         self.grid_columnconfigure(0, weigh=1)
@@ -12,8 +13,6 @@ class ItemSearch(customtkinter.CTkFrame):
         
         # Set database path
         self.database_path = r"C:\Users\ondrej.rott\Documents\Python\MASO\inventory.db"
-        # Dummy list database options
-        self.options = ["ondra", "Ondra", " Martin", "ONdra Martin", "ho v no", "LOpata "]
         # Dummy list for items already selected for sell - these will not appear in options to select
         self.already_selected = []
         # Search results for autosuggestion when searching
@@ -27,8 +26,8 @@ class ItemSearch(customtkinter.CTkFrame):
         self.search_window = customtkinter.CTkEntry(self, text_color="grey")
         self.search_window.grid(row=1, column=0, sticky="ew")
          
-        # Create results frame
-        self.results_frame = customtkinter.CTkFrame(self, height=80,fg_color="#2D2D2D")
+        # Create results frame fg_color="#2D2D2D"
+        self.results_frame = customtkinter.CTkFrame(self, height=80, fg_color="#2D2D2D")
         self.results_frame.grid(row=2, column=0, sticky="ew")
 
         # Binding for placeholder to search window
@@ -38,10 +37,10 @@ class ItemSearch(customtkinter.CTkFrame):
         self.search_window.bind("<KeyRelease>", self.update_search_results)
 
         # Create ListBox for search results
-        self.search_results_listbox = tkinter.Listbox(self.results_frame, height=5)
-        # Create scrollbar for listbox
-        #self.search_results_scrollbar = customtkinter.CTkScrollbar(self.results_frame)
-        #self.search_results_scrollbar.pack(side=customtkinter.RIGHT, fill=customtkinter.Y)
+        self.search_results_listbox = tkinter.Listbox(self.results_frame, font=("Roboto", 12, "bold"), bg="light grey", highlightbackground="grey" , height=6)
+        ## Create scrollbar for listbox
+        #self.search_results_scrollbar = tkinter.Scrollbar(self.search_results_listbox)
+        #self.search_results_scrollbar.pack(side=tkinter.RIGHT, fill=tkinter.Y)
 
         # Bind the ListBox selection event to a function
         self.search_results_listbox.bind('<<ListboxSelect>>', self.on_listbox_select)
@@ -74,11 +73,14 @@ class ItemSearch(customtkinter.CTkFrame):
         self.update_search_results(event)
 
     def update_search_results(self, event):
+        # Dummy list database options
+        self.options = get_available_products() # Get all products records from database as list of tupples [(id, Name, druh, typ),]
+        self.options = [" - ".join([str(field) for field in record if field is not None]) for record in self.options] # Format as text to show on buttons
         # If nothing left to show → show info.
         if len(self.options) - len(self.already_selected) == 0:
             print("uz nezbylo nic k vybrani")
             self.search_window.delete(0, 'end')
-            self.search_window.insert(0, f"There no other items to be selected")
+            self.search_window.insert(0, f"There are no more items to be selected...")
             self.search_window.configure(text_color="grey")
             self.search_results_listbox.forget()      
         # Get current search text
@@ -104,7 +106,7 @@ class ItemSearch(customtkinter.CTkFrame):
                     self.search_results_listbox.insert(tkinter.END, result)
                 # Show the ListBox if it's not currently visible
                 if not self.search_results_listbox.winfo_viewable():
-                    self.search_results_listbox.pack(fill="x", expand=True)
+                    self.search_results_listbox.pack(padx=10, fill="x", expand=True)
             # If nothing else can be selected → hide options list
             else:
                 if text_to_search_for:

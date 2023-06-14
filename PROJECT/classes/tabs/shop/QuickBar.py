@@ -1,5 +1,9 @@
 import customtkinter
 import json
+from classes.tabs.shop.ItemLine import ItemLine
+from functions.shop_tab_functions.quickbar_functions import get_available_products, get_product_data_for_item_line
+from functions.shop_tab_functions.Item_list_functions import ItemLine
+
 
 class QuickBar(customtkinter.CTkFrame):
     """
@@ -22,7 +26,8 @@ class QuickBar(customtkinter.CTkFrame):
 
     def __init__(self, master=None, **kwargs):
         super().__init__(master=master, **kwargs)
-        #self.pack(side="top", pady=10, padx=5, fill="both", expand=True)
+        
+        self.selling_observers = []
         self.grid(row=0, column=0, sticky="nsew")
 
         self.master.grid_columnconfigure(0,weight=1)
@@ -32,6 +37,7 @@ class QuickBar(customtkinter.CTkFrame):
         
         # Load the last known buttons settings from saved JSON file
         self.quickbar_buttons_settings = self.load_quickbar_buttons_text(self.settings_file_path)
+        print(self.quickbar_buttons_settings)
         
         # Set initial state to normal (normal / edit)
         self.state = "normal"
@@ -53,10 +59,6 @@ class QuickBar(customtkinter.CTkFrame):
         self.buttons_grid = customtkinter.CTkFrame(self)
         self.buttons_grid.grid(row=1, column=0, sticky='nsew', pady=10)
 
-        # TODO - connect to db items
-        # Define the options for the selection widget - select from db Items
-        self.available_items = ["Item 1", "Item 2", "Item 3", "Item 4", "Item 5"]
-
         # Populate the button grid with actual buttons based on last saved settings. Grid 3rows x 4collumns buttons.
         self.buttons = []
         for row in range(3):
@@ -64,9 +66,11 @@ class QuickBar(customtkinter.CTkFrame):
             self.buttons_grid.grid_rowconfigure(row, weight=1) # set resizing for rows
             for column in range(4):
                 self.buttons_grid.grid_columnconfigure(column, weight=1) # set resizing for columns
-                button_current_item = self.quickbar_buttons_settings[row][column] # Check if this position have some button saved in settings.
-                if button_current_item != " ": # If some saved value, populate button with that value.
-                    btn = customtkinter.CTkButton(self.buttons_grid, fg_color="orange", hover_color="white", text=button_current_item, text_color="black", state="normal", command=lambda i=row, j=column: self.on_button_click(i, j))
+                button_current_produkt_id = self.quickbar_buttons_settings[row][column] # Check if this position have some produkt ID saved for this button in settings.
+                if button_current_produkt_id != " ": # If some saved produkt ID, populate button with Name for that produkt ID that value.
+                    current_produkt_record = get_available_products([button_current_produkt_id])[0] # Returns list of tuples with 1 tuple in it.
+                    current_produkt_name = " - ".join([str(field) for field in current_produkt_record if field is not None]) # Format as text to show on buttons
+                    btn = customtkinter.CTkButton(self.buttons_grid, fg_color="orange", hover_color="white", text=current_produkt_name, text_color="black", state="normal", command=lambda i=row, j=column: self.on_button_click(i, j))
                     btn.grid(row=row, column=column, sticky='nsew', padx=2, pady=2)
                     btn_row.append(btn)
                 else: # Else load default empty button
@@ -79,7 +83,17 @@ class QuickBar(customtkinter.CTkFrame):
         if self.state == "normal":
             # add to selling items logic
             print("adding item to cart")
-            pass
+            # Get item data_dict from database
+            sell_item_id = self.quickbar_buttons_settings[row][column]
+            sell_item_data = get_product_data_for_item_line(sell_item_id)
+            print(f"retrivnuta data {sell_item_data}")
+            item_data_dict = self.create_item_data_dict(sell_item_data)
+            print(f"postaveny data dict {item_data_dict}")
+
+            # Create Item line in relvant elements
+            for observer in self.selling_observers:
+                observer.add_item_line(item_data_dict)
+                pass
         elif self.state == "edit":
             self.edit_button(row, column)
 
@@ -100,10 +114,14 @@ class QuickBar(customtkinter.CTkFrame):
 
         ## Select new item section of top level.
         # Create select label
-        self.select_label = customtkinter.CTkLabel(self.toplevel, text="Vyber polozku pro tuto pozici:", padx=5, pady=5)
+        self.select_label = customtkinter.CTkLabel(self.toplevel, text="Vyber PRODUKT pro tuto pozici:", padx=5, pady=5)
         self.select_label.pack()
 
         # Create a Combobox
+        # Define the options for the selection widget - select from db Items
+        self.options = get_available_products() # Get all products records from database as list of tupples [(id, Name, druh, typ),]
+        self.available_items = [" - ".join([str(field) for field in record if field is not None]) for record in self.options] # Format as text to show on buttons
+
         self.combo = customtkinter.CTkComboBox(self.toplevel, values=self.available_items)
         self.combo.pack()
 
@@ -125,8 +143,10 @@ class QuickBar(customtkinter.CTkFrame):
         # Bind Delete key to clear button
         self.toplevel.bind("<Delete>", lambda event: self.clear_item_from_button(row, column))
 
-    def select_item_for_button(self, row, column): # Function to pdate the button text with value selected in Combobox.
+    def select_item_for_button(self, row, column): # Function to udate the button text with name of selected product from Combobox and save that product ID to settings for this button.
         self.buttons[row][column].configure(state="normal", fg_color="orange", hover_color="white", text=self.combo.get(), text_color="black")
+        self.quickbar_buttons_settings[row][column] = int(self.combo.get().split(" - ", 1)[0]) # this gets produkt ID from record and saves it to settings
+        print(self.quickbar_buttons_settings)
 
         # Destroy the toplevel window
         self.toplevel.destroy()
@@ -134,6 +154,8 @@ class QuickBar(customtkinter.CTkFrame):
     def clear_item_from_button(self, row, column): # Removes bound item from given button.
         # Reset the button text to "+" - none selected value.
         self.buttons[row][column].configure(fg_color="light grey", hover_color="dark grey", text="+", text_color="black")
+        self.quickbar_buttons_settings[row][column] = " " # this resets the settings for this button to default
+        print(self.quickbar_buttons_settings)
 
         # Destroy the toplevel window
         self.toplevel.destroy()
@@ -158,9 +180,8 @@ class QuickBar(customtkinter.CTkFrame):
                     else:
                         button.configure(state="normal", fg_color="orange", hover_color="white", text_color="black")
             # Save current buttons settings into JSON file
-            self.quickbar_buttons_state = [[button.cget("text") for button in row] for row in self.buttons]
             with open(self.settings_file_path, "w") as f:
-                json.dump(self.quickbar_buttons_state, f)
+                json.dump(self.quickbar_buttons_settings, f)
     
     def load_quickbar_buttons_text(self, settings_file_path: str): # Loads last known Quick bar buttons settings when starting the app.
         default_settings = [
@@ -178,3 +199,22 @@ class QuickBar(customtkinter.CTkFrame):
         except json.JSONDecodeError:
             print(f"Warning: Quick bar settings file appears to have invalid data or no data in it. → initializing Quick bar with default settings.")
             return default_settings
+
+    def register_observer(self, observer): # Registers instance of some other class as Observer of this Quickbar instance to achive visibility connection between them
+        self.selling_observers.append(observer)
+
+    def create_item_data_dict(self, item_data: list): # Takes Item data from database record and returns dictionary for Item line instance creation.
+        item_data_dict = dict()
+
+        print(item_data)
+
+        item_data_dict["id"] = item_data[0]
+        item_data_dict["units"] = item_data[1]
+        item_data_dict["name"] = " - ".join([str(field) for field in [item_data[2], item_data[3], item_data[4]] if field is not None])
+        item_data_dict["price"] = item_data[5]
+        item_data_dict["stock"] = 250 # TO link produkt stock QTY from database
+        item_data_dict["icon_url"] = r"C:\Users\ondrej.rott\Documents\Python\MASO\Images\icon.gif" # TO link produkt ICON from DB
+
+
+        return item_data_dict
+ 

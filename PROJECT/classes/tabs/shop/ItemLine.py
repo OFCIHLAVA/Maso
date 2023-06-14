@@ -5,7 +5,7 @@ from tkinter import StringVar
 from PIL import Image
 
 class ItemLine(CTkFrame):
-    
+
     active_item_lines = []
     total_of_all_active_lines = 0
     
@@ -24,73 +24,6 @@ class ItemLine(CTkFrame):
         # Actions to execute during init
         ItemLine.active_item_lines.append(self)
         ItemLine.total_of_all_active_lines += self.subtotal
-
-
-        # Plus and minus buttons to manipulate quantity, destrous line if quantity decreased bellow zero
-        def decrease_quantity():
-            try:
-                quantity = float(self.quantity_value.get())
-                if quantity > 1:
-                    quantity -= 1
-                    self.quantity_value.set(format_number(quantity))
-                    calculate_subtotal()
-                    self.footer.update_total()
-                else:
-                # elif quantity == 0:
-                    destroy_line()
-            except:
-                pass
-
-        def increase_quantity():
-            try:
-                quantity = float(self.quantity_value.get())
-                on_stock = self.stock
-                if quantity < on_stock:
-                    quantity += 1
-                    
-                    self.quantity_value.set(format_number(quantity))
-                    calculate_subtotal()
-            except:
-                pass
-
-        # Function to validate quantiy value
-        def validate_quantity(*args):
-            try:
-                value = float(self.quantity_value.get())
-                if value < 0:
-                    self.quantity_value.set("1")
-                elif value > self.stock:
-                    self.quantity_value.set(format_number(self.stock))
-                else:
-                    self.quantity_value.set(format_number(value))
-                calculate_subtotal()   
-            except:
-                self.quantity_value.set("1")
-                calculate_subtotal()
-
-        # Function to update subtotal label
-        def calculate_subtotal(*args):
-            try:
-                quantity = float(self.quantity_value.get())
-                price = self.price
-                old_subtotal = self.subtotal
-                self.subtotal = quantity*price
-                self.subtotal_value.set(format_number(quantity*price))
-                ItemLine.total_of_all_active_lines += self.subtotal - old_subtotal
-                self.footer.update_total()
-            except ValueError:
-                pass
-
-        # Destroy self function
-        def destroy_line():
-            ItemLine.total_of_all_active_lines -= self.subtotal
-            ItemLine.active_item_lines.remove(self) # TADY Skonceno
-            self.footer.update_total()
-            self.destroy()
-
-        # Helper function to show numbers in more readable format
-        def format_number(value):
-            return format(value, ',').replace(',', ' ')    
 
         # pack line in Parrent frame
         self.pack(side="top", pady=1, padx=5, fill="x")
@@ -129,7 +62,7 @@ class ItemLine(CTkFrame):
         self.sep_label.pack(side="left", padx=5, fill="x")
 
         # minus qty button
-        self.decrease_quantity_button = CTkButton(self, width=30, text="-", font=("roboto", 14, "bold"), fg_color="grey", hover=True, hover_color="red", command=decrease_quantity)
+        self.decrease_quantity_button = CTkButton(self, width=30, text="-", font=("roboto", 14, "bold"), fg_color="grey", hover=True, hover_color="red", command=self.decrease_quantity)
         self.decrease_quantity_button.pack(side="left", fill="x")
 
         self.quantity_value = StringVar()
@@ -137,12 +70,12 @@ class ItemLine(CTkFrame):
         self.quantity_value.trace("w", self.footer.update_total)
         #quantity_value.trace("w", validate_quantity)
         self.quantity_entry = CTkEntry(self, width=50, textvariable=self.quantity_value, font=("roboto", 12, "bold"), justify="center")
-        self.quantity_entry.bind('<FocusOut>', validate_quantity)
-        self.quantity_entry.bind('<Return>', validate_quantity)
+        self.quantity_entry.bind('<FocusOut>', self.validate_quantity)
+        self.quantity_entry.bind('<Return>', self.validate_quantity)
         self.quantity_entry.pack(side="left", padx=3, fill="x")
 
         # plus qty button
-        self.increase_quantity_button = CTkButton(self, width=30, text="+", font=("roboto", 14, "bold"), fg_color="grey", hover=True, hover_color="green", command=increase_quantity)
+        self.increase_quantity_button = CTkButton(self, width=30, text="+", font=("roboto", 14, "bold"), fg_color="grey", hover=True, hover_color="green", command=self.increase_quantity)
         self.increase_quantity_button.pack(side="left", fill="x")
 
         self.sep_label = CTkLabel(self, width=1, text="", bg_color="yellow")
@@ -155,13 +88,75 @@ class ItemLine(CTkFrame):
         self.sep_label.pack(side="left", padx=5, fill="x")
 
         self.subtotal_value = StringVar()
-        self.subtotal_value.set(format_number(self.price))
+        self.subtotal_value.set(ItemLine.format_number(self.price))
         self.subtotal_label = CTkLabel(self, width=81, textvariable=self.subtotal_value, font=("roboto", 12, "bold", "bold"), pady=10, padx=10)
         self.subtotal_label.pack(side="left", padx=5, fill="x")
 
         self.sep_label = CTkLabel(self, width=1, text="", bg_color="yellow")
         self.sep_label.pack(side="left", padx=5, fill="x")
 
-        self.destroy_line_button = CTkButton(self, width=30, text="X", font=("roboto", 14, "bold"), fg_color="black", hover=True, hover_color="orange", command=destroy_line)
+        self.destroy_line_button = CTkButton(self, width=30, text="X", font=("roboto", 14, "bold"), fg_color="black", hover=True, hover_color="orange", command=self.destroy_line)
         self.destroy_line_button.pack(side="left", padx=5, fill="x")
 
+    # Plus and minus buttons to manipulate quantity, destrous line if quantity decreased bellow zero
+    def decrease_quantity(self):
+        try:
+            quantity = float(self.quantity_value.get())
+            if quantity > 1:
+                quantity -= 1
+                self.quantity_value.set(ItemLine.format_number(quantity))
+                self.calculate_subtotal()
+                self.footer.update_total()
+            else:
+            # elif quantity == 0:
+                destroy_line()
+        except:
+            pass
+    def increase_quantity(self):
+        try:
+            quantity = float(self.quantity_value.get())
+            on_stock = self.stock
+            if quantity < on_stock:
+                quantity += 1
+                
+                self.quantity_value.set(ItemLine.format_number(quantity))
+                self.calculate_subtotal()
+        except:
+            pass
+    # Function to validate quantiy value
+    def validate_quantity(self, *args):
+        try:
+            value = float(self.quantity_value.get())
+            if value < 0:
+                self.quantity_value.set("1")
+            elif value > self.stock:
+                self.quantity_value.set(ItemLine.format_number(self.stock))
+            else:
+                self.quantity_value.set(ItemLine.format_number(value))
+            self.calculate_subtotal()   
+        except:
+            self.quantity_value.set("1")
+            self.calculate_subtotal()
+    # Function to update subtotal label
+    def calculate_subtotal(self, *args):
+        try:
+            quantity = float(self.quantity_value.get())
+            price = self.price
+            old_subtotal = self.subtotal
+            self.subtotal = quantity*price
+            self.subtotal_value.set(ItemLine.format_number(quantity*price))
+            ItemLine.total_of_all_active_lines += self.subtotal - old_subtotal
+            self.footer.update_total()
+        except ValueError:
+            print("error")
+            pass
+    # Destroy self function
+    def destroy_line(self):
+        ItemLine.total_of_all_active_lines -= self.subtotal
+        ItemLine.active_item_lines.remove(self) # TADY Skonceno
+        self.footer.update_total()
+        self.destroy()
+    # Helper function to show numbers in more readable format
+    @staticmethod
+    def format_number(value):
+        return format(value, ',').replace(',', ' ') 
